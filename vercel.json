@@ -1,0 +1,9 @@
+{
+  "version": 2,
+  "routes": [
+    { "src": "/api/(.*)", "dest": "/api/$1" },
+    { "src": "/panel", "dest": "/panel.html" },
+    { "src": "/panel.html", "dest": "/panel.html" },
+    { "src": "/(.*)", "dest": "/$1" }
+  ]
+}
