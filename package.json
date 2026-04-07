@@ -1,0 +1,12 @@
+{
+  "name": "iser-matriculacion",
+  "version": "1.0.0",
+  "description": "Formulario de Matriculacion 2026 - ISER",
+  "private": true,
+  "dependencies": {
+    "googleapis": "^140.0.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
