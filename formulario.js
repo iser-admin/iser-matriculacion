@@ -2,6 +2,7 @@
 // ISER MATRICULACION 2026 - LOGICA DEL FORMULARIO
 // ================================================
 
+// Estado global
 const estado = {
   carrera: null,
   turno: null,
@@ -10,28 +11,24 @@ const estado = {
   submittedData: null,
 };
 
-// Mapeo de data-carrera del HTML a clave en CARRERAS
-const CARRERA_MAP = {
-  locucion: "LOCUCION",
-  produccion: "PRODUCCION",
-  guion: "GUION",
-  convergencia: "CONVERGENCIA",
-  operacion_radio: "OPERACION_RADIO",
-  operacion_tv: "OPERACION_TV",
-  operacion_planta: "OPERACION_PLANTA",
-};
-
+// ---- INICIALIZACION ----
 document.addEventListener("DOMContentLoaded", () => {
+  // Carrera buttons
   document.querySelectorAll("[data-carrera]").forEach((btn) => {
     btn.addEventListener("click", () => seleccionarCarrera(btn.dataset.carrera));
   });
+
+  // Orientacion buttons (operacion)
   document.querySelectorAll("[data-orientacion]").forEach((btn) => {
     btn.addEventListener("click", () => seleccionarOrientacion(btn.dataset.orientacion));
   });
+
+  // Turno buttons (locucion)
   document.querySelectorAll("[data-turno]").forEach((btn) => {
     btn.addEventListener("click", () => seleccionarTurno(btn.dataset.turno));
   });
 
+  // Navegacion
   document.getElementById("btn-volver-orientacion").addEventListener("click", volverCarrera);
   document.getElementById("btn-volver-turno").addEventListener("click", volverCarrera);
   document.getElementById("btn-volver-datos").addEventListener("click", volverDesdeDatos);
@@ -43,6 +40,7 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("btn-descargar-pdf").addEventListener("click", descargarPDF);
   document.getElementById("btn-nuevo-formulario").addEventListener("click", nuevoFormulario);
 
+  // Mayusculas automaticas
   ["apellidos", "nombres", "nacionalidad", "domicilio", "localidad"].forEach((id) => {
     const el = document.getElementById(id);
     if (el) {
@@ -54,12 +52,16 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
+  // DNI solo numeros
   document.getElementById("dni").addEventListener("input", (e) => {
     e.target.value = e.target.value.replace(/[^0-9]/g, "");
   });
+
+  // Anio matricula dinamico segun carrera
+  document.getElementById("anio-matricula").addEventListener("change", actualizarAnioOpciones);
 });
 
-// ---- NAVEGACION ----
+// ---- NAVEGACION ENTRE PASOS ----
 function irPaso(idPaso) {
   document.querySelectorAll(".paso").forEach((p) => p.classList.remove("activo"));
   document.getElementById(idPaso).classList.add("activo");
@@ -68,10 +70,10 @@ function irPaso(idPaso) {
 
 function seleccionarCarrera(carrera) {
   if (carrera === "convergencia") {
-    alert("La carrera Convergencia estará disponible próximamente.");
+    alert("La carrera Convergencia estará disponible próximamente. Por favor seleccioná otra carrera.");
     return;
   }
-  estado.carreraRaw = carrera;
+  estado.carrera = carrera;
   estado.turno = null;
 
   if (carrera === "operacion") {
@@ -79,7 +81,6 @@ function seleccionarCarrera(carrera) {
   } else if (carrera === "locucion") {
     irPaso("paso-turno");
   } else {
-    estado.carrera = CARRERA_MAP[carrera];
     irPaso("paso-datos");
     actualizarBadge();
     actualizarAnioOpciones();
@@ -87,8 +88,7 @@ function seleccionarCarrera(carrera) {
 }
 
 function seleccionarOrientacion(orientacion) {
-  estado.carreraRaw = orientacion;
-  estado.carrera = CARRERA_MAP[orientacion];
+  estado.carrera = orientacion;
   irPaso("paso-datos");
   actualizarBadge();
   actualizarAnioOpciones();
@@ -96,7 +96,6 @@ function seleccionarOrientacion(orientacion) {
 
 function seleccionarTurno(turno) {
   estado.turno = turno;
-  estado.carrera = CARRERA_MAP["locucion"];
   irPaso("paso-datos");
   actualizarBadge();
   actualizarAnioOpciones();
@@ -105,26 +104,25 @@ function seleccionarTurno(turno) {
 function volverCarrera() {
   irPaso("paso-carrera");
   estado.carrera = null;
-  estado.carreraRaw = null;
   estado.turno = null;
 }
 
 function volverDesdeDatos() {
-  if (estado.carreraRaw === "locucion") {
+  if (estado.carrera === "locucion") {
     irPaso("paso-turno");
-  } else if (["operacion_radio","operacion_tv","operacion_planta"].includes(estado.carreraRaw)) {
+  } else if (
+    estado.carrera === "operacion_radio" ||
+    estado.carrera === "operacion_tv" ||
+    estado.carrera === "operacion_planta"
+  ) {
     irPaso("paso-orientacion");
   } else {
     irPaso("paso-carrera");
   }
 }
 
-function getCarreraDatos() {
-  return CARRERAS[estado.carrera];
-}
-
 function actualizarBadge() {
-  const datos = getCarreraDatos();
+  const datos = CARRERAS[estado.carrera];
   if (!datos) return;
   let texto = datos.nombre;
   if (estado.turno) {
@@ -137,16 +135,16 @@ function actualizarBadge() {
 
 function actualizarAnioOpciones() {
   const sel = document.getElementById("anio-matricula");
-  const datos = getCarreraDatos();
+  const datos = CARRERAS[estado.carrera];
   if (!datos) return;
-  const anios = Object.keys(datos.pendientes);
+  const maxAnio = datos.anios;
   sel.innerHTML = '<option value="">Seleccioná...</option>';
-  anios.forEach((anio, i) => {
+  for (let i = 1; i <= maxAnio; i++) {
     const opt = document.createElement("option");
-    opt.value = i + 1;
-    opt.textContent = `${i + 1}° Año`;
+    opt.value = i;
+    opt.textContent = `${i}° Año`;
     sel.appendChild(opt);
-  });
+  }
 }
 
 // ---- DATOS PERSONALES ----
@@ -178,6 +176,7 @@ function validarDatos() {
     const el = document.getElementById(id);
     const valor = el.value.trim();
     el.classList.remove("error");
+
     if (!valor) {
       el.classList.add("error");
       errores.push(label);
@@ -185,6 +184,7 @@ function validarDatos() {
     }
   });
 
+  // Validar email
   const emailEl = document.getElementById("email");
   if (emailEl.value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailEl.value)) {
     emailEl.classList.add("error");
@@ -192,6 +192,7 @@ function validarDatos() {
     valido = false;
   }
 
+  // Validar DNI
   const dniEl = document.getElementById("dni");
   if (dniEl.value && (dniEl.value.length < 7 || dniEl.value.length > 9)) {
     dniEl.classList.add("error");
@@ -202,6 +203,7 @@ function validarDatos() {
   if (!valido) {
     alert(`Por favor completá los siguientes campos obligatorios:\n\n• ${errores.join("\n• ")}`);
   }
+
   return valido;
 }
 
@@ -220,7 +222,6 @@ function guardarDatos() {
     email: document.getElementById("email").value.trim(),
     anioMatricula: document.getElementById("anio-matricula").value,
     carrera: estado.carrera,
-    carreraRaw: estado.carreraRaw,
     turno: estado.turno,
     fechaFormulario: new Date().toLocaleDateString("es-AR"),
   };
@@ -230,9 +231,10 @@ function guardarDatos() {
 function renderizarMaterias() {
   const container = document.getElementById("materias-container");
   container.innerHTML = "";
-  const datos = getCarreraDatos();
+  const datos = CARRERAS[estado.carrera];
   if (!datos) return;
 
+  // Resetear selecciones
   estado.materias = { pendientes: {}, recursar: {} };
 
   const anios = Object.keys(datos.pendientes);
@@ -242,26 +244,24 @@ function renderizarMaterias() {
 
     const bloque = document.createElement("div");
     bloque.className = "anio-bloque";
+
     bloque.innerHTML = `
       <div class="anio-header">${anio}</div>
       <div class="anio-body">
         <div class="materias-columna">
           <div class="columna-titulo pendiente">📋 Pendientes a Rendir</div>
-          ${pendientes.length
-            ? pendientes.map((m) => crearCheckbox(m, "pendientes", anio)).join("")
-            : '<p style="font-size:0.82rem;color:#999;">Sin materias disponibles</p>'}
+          ${pendientes.length ? pendientes.map((m) => crearCheckbox(m, "pendiente", anio)).join("") : '<p style="font-size:0.82rem;color:#999;">Sin materias disponibles</p>'}
         </div>
         <div class="materias-columna">
           <div class="columna-titulo recursar">🔄 A Recursar</div>
-          ${recursar.length
-            ? recursar.map((m) => crearCheckbox(m, "recursar", anio)).join("")
-            : '<p style="font-size:0.82rem;color:#999;">Sin materias disponibles</p>'}
+          ${recursar.length ? recursar.map((m) => crearCheckbox(m, "recursar", anio)).join("") : '<p style="font-size:0.82rem;color:#999;">Sin materias disponibles</p>'}
         </div>
       </div>
     `;
     container.appendChild(bloque);
   });
 
+  // Agregar listeners a checkboxes
   container.querySelectorAll('input[type="checkbox"]').forEach((cb) => {
     cb.addEventListener("change", (e) => {
       const { tipo, anio, materia } = e.target.dataset;
@@ -276,8 +276,8 @@ function renderizarMaterias() {
 }
 
 function crearCheckbox(materia, tipo, anio) {
-  const claseItem = tipo === "pendientes" ? "pendiente-check" : "recursar-check";
-  const id = `cb-${tipo}-${anio}-${materia}`.replace(/[\s\/\.]/g, "-").replace(/[^a-zA-Z0-9-]/g, "");
+  const claseItem = tipo === "pendiente" ? "pendiente-check" : "recursar-check";
+  const id = `cb-${tipo}-${anio}-${materia}`.replace(/\s+/g, "-").replace(/[^a-zA-Z0-9-]/g, "");
   return `
     <label class="materia-item ${claseItem}" for="${id}">
       <input type="checkbox" id="${id}"
@@ -292,7 +292,7 @@ function mostrarResumen() {
   guardarDatos();
   const datos = estado.datos;
   const turnos = { TM: "Turno Mañana", TT: "Turno Tarde", TN: "Turno Noche" };
-  const carreraDatos = getCarreraDatos();
+  const carreraDatos = CARRERAS[estado.carrera];
 
   let html = `
     <div class="resumen-datos">
@@ -314,8 +314,10 @@ function mostrarResumen() {
     </div>
   `;
 
+  // Materias seleccionadas
   const anios = Object.keys(carreraDatos.pendientes);
   let hayMaterias = false;
+
   let htmlMaterias = '<div class="resumen-materias"><h3>📚 Materias seleccionadas</h3>';
 
   anios.forEach((anio) => {
@@ -323,14 +325,20 @@ function mostrarResumen() {
     const recu = estado.materias.recursar[anio] || [];
     if (pend.length === 0 && recu.length === 0) return;
     hayMaterias = true;
+
     htmlMaterias += `<div class="resumen-anio-titulo">${anio}</div>`;
-    pend.forEach((m) => { htmlMaterias += `<span class="resumen-tag tag-pendiente">P: ${m}</span>`; });
-    recu.forEach((m) => { htmlMaterias += `<span class="resumen-tag tag-recursar">R: ${m}</span>`; });
+    pend.forEach((m) => {
+      htmlMaterias += `<span class="resumen-tag tag-pendiente">P: ${m}</span>`;
+    });
+    recu.forEach((m) => {
+      htmlMaterias += `<span class="resumen-tag tag-recursar">R: ${m}</span>`;
+    });
   });
 
   if (!hayMaterias) {
-    htmlMaterias += '<p style="color:#888;font-size:0.9rem;">No seleccionaste materias.</p>';
+    htmlMaterias += '<p style="color:#888;font-size:0.9rem;">No seleccionaste materias pendientes ni a recursar.</p>';
   }
+
   htmlMaterias += "</div>";
   html += htmlMaterias;
 
@@ -362,26 +370,31 @@ async function enviarFormulario() {
     });
 
     const result = await res.json();
+
     if (!res.ok) throw new Error(result.error || "Error al enviar");
 
     estado.submittedData = { ...payload, pdfUrl: result.pdfUrl };
+
     mostrarLoading(false);
     mostrarConfirmacion(payload);
   } catch (err) {
     mostrarLoading(false);
-    alert("Hubo un error al enviar el formulario. Por favor intentá nuevamente.\n\nError: " + err.message);
+    alert("Hubo un error al enviar el formulario. Por favor intentá nuevamente o comunicate con Bedelía.\n\nError: " + err.message);
+    console.error(err);
   }
 }
 
 function mostrarConfirmacion(datos) {
   const turnos = { TM: "Turno Mañana", TT: "Turno Tarde", TN: "Turno Noche" };
-  const carreraDatos = getCarreraDatos();
+  const carreraDatos = CARRERAS[datos.carrera];
+
   document.getElementById("enviado-info").innerHTML = `
     <strong>${datos.apellidos}, ${datos.nombres}</strong><br>
     ${carreraDatos.nombre}${datos.turno ? " — " + turnos[datos.turno] : ""}<br>
     ${datos.anioMatricula}° Año | DNI: ${datos.dni}<br>
     <small style="color:#888">Enviado el ${datos.fechaFormulario}</small>
   `;
+
   irPaso("paso-enviado");
 }
 
@@ -389,17 +402,20 @@ function mostrarConfirmacion(datos) {
 async function descargarPDF() {
   const { jsPDF } = window.jspdf;
   const datos = estado.submittedData || estado.datos;
-  const carreraDatos = getCarreraDatos();
+  const carreraDatos = CARRERAS[datos.carrera];
   const turnos = { TM: "Turno Mañana", TT: "Turno Tarde", TN: "Turno Noche" };
 
   const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
   const pageW = 210;
   const margin = 20;
+  const colW = (pageW - margin * 2) / 2;
   let y = 15;
 
-  // Encabezado
+  // --- ENCABEZADO ---
   doc.setDrawColor(0, 48, 135);
   doc.setLineWidth(0.5);
+  doc.line(margin, y + 12, pageW - margin, y + 12);
+
   doc.setFont("helvetica", "bold");
   doc.setFontSize(7.5);
   doc.setTextColor(0, 48, 135);
@@ -408,21 +424,26 @@ async function descargarPDF() {
   doc.setFont("helvetica", "normal");
   doc.setFontSize(6.5);
   doc.setTextColor(80, 80, 80);
-  doc.text("INSTITUTO SUPERIOR DE ENSEÑANZA RADIOFÓNICA", margin, y + 13);
+  doc.text("INSTITUTO SUPERIOR DE ENSEÑANZA RADIOFÓNICA", margin, y + 12.5);
+
   doc.setFont("helvetica", "bold");
   doc.setFontSize(18);
   doc.setTextColor(0, 48, 135);
   doc.text("ISER", pageW - margin, y + 9, { align: "right" });
+
   y += 18;
+
   doc.line(margin, y, pageW - margin, y);
   y += 6;
 
+  // Título
   doc.setFont("helvetica", "bold");
   doc.setFontSize(13);
   doc.setTextColor(0, 48, 135);
   doc.text("FORMULARIO DE MATRICULACIÓN", pageW / 2, y, { align: "center" });
   y += 8;
 
+  // Fecha y carrera
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
   doc.setTextColor(50, 50, 50);
@@ -433,22 +454,26 @@ async function descargarPDF() {
   y += 5;
   doc.setFont("helvetica", "normal");
   doc.text(`Año al que se matricula: ${datos.anioMatricula}°`, margin, y);
-  if (datos.turno) doc.text(`Turno: ${turnos[datos.turno]}`, margin + 70, y);
+  if (datos.turno) {
+    doc.text(`Turno: ${turnos[datos.turno]}`, margin + 60, y);
+  }
   y += 8;
+
   doc.line(margin, y, pageW - margin, y);
   y += 5;
 
-  // Datos personales
+  // --- DATOS PERSONALES ---
   doc.setFont("helvetica", "bold");
   doc.setFontSize(10);
   doc.setTextColor(0, 48, 135);
   doc.text("DATOS PERSONALES", margin, y);
   y += 6;
+
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
   doc.setTextColor(30, 30, 30);
 
-  const filasDatos = [
+  const camposDatos = [
     [`Apellidos: ${datos.apellidos}`, `Nombres: ${datos.nombres}`],
     [`Fecha de Nacimiento: ${formatearFecha(datos.fechaNacimiento)}`, `Nacionalidad: ${datos.nacionalidad}`, `DNI Nº: ${datos.dni}`],
     [`Domicilio: ${datos.domicilio}`, `Localidad: ${datos.localidad}`, `C.P.: ${datos.cp || "—"}`],
@@ -456,7 +481,7 @@ async function descargarPDF() {
     [`E-Mail: ${datos.email}`],
   ];
 
-  filasDatos.forEach((fila) => {
+  camposDatos.forEach((fila) => {
     const partW = (pageW - margin * 2) / fila.length;
     fila.forEach((texto, i) => {
       doc.text(texto, margin + i * partW, y, { maxWidth: partW - 4 });
@@ -468,104 +493,127 @@ async function descargarPDF() {
   doc.line(margin, y, pageW - margin, y);
   y += 5;
 
-  // Materias pendientes
+  // --- MATERIAS ---
+  const anios = Object.keys(carreraDatos.pendientes);
+
+  // PENDIENTES
   doc.setFont("helvetica", "bold");
   doc.setFontSize(10);
   doc.setTextColor(0, 48, 135);
   doc.text("ASIGNATURAS PENDIENTES A RENDIR  (marcar con una X)", margin, y);
   y += 6;
-  y = renderMateriasEnPDF(doc, carreraDatos, "pendientes", margin, y, pageW);
+
+  y = renderMateriasEnPDF(doc, carreraDatos, estado.materias, "pendientes", margin, y, pageW, colW);
 
   y += 3;
   doc.line(margin, y, pageW - margin, y);
   y += 5;
 
-  // Materias recursar
+  // RECURSAR
   doc.setFont("helvetica", "bold");
   doc.setFontSize(10);
   doc.setTextColor(0, 48, 135);
   doc.text("ASIGNATURAS A RECURSAR  (marcar con una X)", margin, y);
   y += 6;
-  y = renderMateriasEnPDF(doc, carreraDatos, "recursar", margin, y, pageW);
+
+  y = renderMateriasEnPDF(doc, carreraDatos, estado.materias, "recursar", margin, y, pageW, colW);
 
   y += 6;
 
-  // Declaracion
+  // --- DECLARACION ---
   doc.setFontSize(7.5);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(30, 30, 30);
-  const declaracion = "LA/EL FIRMANTE MANIFIESTA QUE LOS DATOS CONSIGNADOS EN EL PRESENTE FORMULARIO SON EXACTOS Y VERDADEROS. ASI MISMO SE NOTIFICA DE LA DISP. N° 196/19, CUYO TEXTO SE ENCUENTRA A DISPOSICIÓN DE LOS INTERESADOS EN BEDELÍA.";
+  const declaracion =
+    "LA/EL FIRMANTE MANIFIESTA QUE LOS DATOS CONSIGNADOS EN EL PRESENTE FORMULARIO SON EXACTOS Y VERDADEROS. " +
+    "ASI MISMO SE NOTIFICA DE LA DISP. N° 196/19, CUYO TEXTO SE ENCUENTRA A DISPOSICIÓN DE LOS INTERESADOS EN BEDELÍA.";
   const splitDecl = doc.splitTextToSize(declaracion, pageW - margin * 2);
   doc.text(splitDecl, margin, y);
   y += splitDecl.length * 4 + 3;
 
+  // Caja supeditada
   doc.setDrawColor(0, 48, 135);
   doc.setLineWidth(0.4);
   doc.rect(margin, y, pageW - margin * 2, 12);
   doc.setFont("helvetica", "normal");
   doc.setFontSize(7.5);
-  const textSup = "LA PRESENTE MATRICULACIÓN QUEDA SUPEDITADA A LA CERTIFICACIÓN DE LOS DATOS APORTADOS Y LAS CONSTANCIAS OBRANTES EN EL RESPECTIVO LEGAJO.";
-  doc.text(doc.splitTextToSize(textSup, pageW - margin * 2 - 6), margin + 3, y + 4);
+  const textSupeditada =
+    "LA PRESENTE MATRICULACIÓN QUEDA SUPEDITADA A LA CERTIFICACIÓN DE LOS DATOS APORTADOS Y LAS CONSTANCIAS OBRANTES EN EL RESPECTIVO LEGAJO.";
+  const splitSup = doc.splitTextToSize(textSupeditada, pageW - margin * 2 - 6);
+  doc.text(splitSup, margin + 3, y + 4);
   y += 18;
 
-  // Firmas
+  // FIRMAS
   const firmaY = Math.max(y, 265);
   doc.setDrawColor(0, 0, 0);
   doc.setLineWidth(0.3);
   doc.line(margin, firmaY, margin + 60, firmaY);
   doc.line(pageW - margin - 60, firmaY, pageW - margin, firmaY);
   doc.setFontSize(8);
+  doc.setFont("helvetica", "normal");
   doc.text("Bedel Interviniente", margin + 30, firmaY + 4, { align: "center" });
   doc.text("Firma y aclaración del Alumno", pageW - margin - 30, firmaY + 4, { align: "center" });
 
+  // Guardar
   const nombreArchivo = `${datos.apellidos}_${datos.nombres}_${carreraDatos.nombre.replace(/\s+/g, "_")}_2026.pdf`;
   doc.save(nombreArchivo);
 }
 
-function renderMateriasEnPDF(doc, carreraDatos, tipo, margin, y, pageW) {
-  const anios = Object.keys(carreraDatos[tipo]);
-  const colW = (pageW - margin * 2) / anios.length;
+function renderMateriasEnPDF(doc, carreraDatos, materiasEstado, tipo, margin, y, pageW, colW) {
+  const anios = Object.keys(carreraDatos[tipo === "pendientes" ? "pendientes" : "recursar"]);
+  const numAnios = anios.length;
 
+  // Calcular columnas por año
+  const colPorAnio = (pageW - margin * 2) / numAnios;
+
+  // Encabezados de año
   doc.setFont("helvetica", "bold");
   doc.setFontSize(8);
   doc.setTextColor(0, 48, 135);
   anios.forEach((anio, i) => {
-    doc.text(anio, margin + i * colW, y, { maxWidth: colW - 2 });
+    const abrev = carreraDatos.nombre.split(" ")[0].toUpperCase();
+    doc.text(`${abrev} ${anio.toUpperCase()}`, margin + i * colPorAnio, y);
   });
   y += 5;
 
-  const maxItems = Math.max(...anios.map((a) => (carreraDatos[tipo][a] || []).length));
+  // Materias
+  const maxItems = Math.max(...anios.map((a) => (carreraDatos[tipo === "pendientes" ? "pendientes" : "recursar"][a] || []).length));
 
   for (let i = 0; i < maxItems; i++) {
     anios.forEach((anio, col) => {
-      const lista = carreraDatos[tipo][anio] || [];
-      const seleccionadas = (estado.materias[tipo][anio] || []);
+      const lista = carreraDatos[tipo === "pendientes" ? "pendientes" : "recursar"][anio] || [];
+      const seleccionadas = (materiasEstado[tipo === "pendientes" ? "pendientes" : "recursar"][anio] || []);
       const materia = lista[i];
       if (!materia) return;
 
-      const x = margin + col * colW;
+      const x = margin + col * colPorAnio;
       const marcada = seleccionadas.includes(materia);
 
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8);
+      doc.setTextColor(30, 30, 30);
+
+      // Checkbox visual
       doc.setDrawColor(80, 80, 80);
       doc.setLineWidth(0.3);
       doc.rect(x, y - 2.5, 3, 3);
-
       if (marcada) {
         doc.setFont("helvetica", "bold");
         doc.setTextColor(0, 100, 0);
         doc.text("X", x + 0.3, y - 0.2);
+        doc.setFont("helvetica", "bold");
       } else {
         doc.setFont("helvetica", "normal");
         doc.setTextColor(30, 30, 30);
       }
 
-      const textoM = doc.splitTextToSize(` ${materia}`, colW - 8);
-      doc.text(textoM, x + 4, y - 0.5);
-      doc.setFont("helvetica", "normal");
-      doc.setTextColor(30, 30, 30);
+      const textoMateria = doc.splitTextToSize(` ${materia}`, colPorAnio - 8);
+      doc.text(textoMateria, x + 4, y - 0.5);
+      if (marcada) doc.setFont("helvetica", "normal");
     });
     y += 5;
   }
+
   return y;
 }
 
@@ -583,7 +631,10 @@ function mostrarLoading(mostrar) {
       overlay = document.createElement("div");
       overlay.id = "loading-overlay";
       overlay.className = "loading-overlay";
-      overlay.innerHTML = `<div class="loading-spinner"></div><p>Enviando formulario...</p>`;
+      overlay.innerHTML = `
+        <div class="loading-spinner"></div>
+        <p>Enviando formulario...</p>
+      `;
       document.body.appendChild(overlay);
     }
     overlay.style.display = "flex";
