@@ -11,25 +11,10 @@
     }
   ],
   "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "/api/$1"
-    },
-    {
-      "src": "/panel",
-      "dest": "/public/panel.html"
-    },
-    {
-      "src": "/panel.html",
-      "dest": "/public/panel.html"
-    },
-    {
-      "src": "/(.*\\.(js|css|jpg|png|ico))",
-      "dest": "/public/$1"
-    },
-    {
-      "src": "/",
-      "dest": "/public/index.html"
-    }
+    { "src": "/api/(.*)", "dest": "/api/$1" },
+    { "src": "/panel", "dest": "/public/panel.html" },
+    { "src": "/panel.html", "dest": "/public/panel.html" },
+    { "src": "/(.*\\.(js|css|jpg|png))", "dest": "/public/$1" },
+    { "src": "/", "dest": "/index.html" }
   ]
 }
