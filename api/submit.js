@@ -58,8 +58,9 @@ const HEADERS = [
 ];
 
 function getClaveSheet(carrera, turno) {
-  if (carrera === "locucion" && turno) return `locucion_${turno}`;
-  return carrera;
+  const c = (carrera || "").toLowerCase();
+  if (c === "locucion" && turno) return `locucion_${turno}`;
+  return c;
 }
 
 async function getAuthClient() {
