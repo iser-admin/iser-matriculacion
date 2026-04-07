@@ -2,9 +2,6 @@
   "version": 2,
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/$1" },
-    { "source": "/panel", "destination": "/public/panel.html" },
-    { "source": "/panel.html", "destination": "/public/panel.html" },
-    { "source": "/", "destination": "/public/index.html" },
-    { "source": "/(.*)", "destination": "/public/$1" }
+    { "source": "/panel", "destination": "/panel.html" }
   ]
 }
