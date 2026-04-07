@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Panel de Bedelía — ISER Matriculación 2026</title>
   <link rel="stylesheet" href="styles.css" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
     body { background: #f0f3f8; }
 
@@ -563,8 +564,7 @@
             </select>
           </td>
           <td>
-            ${pdfUrl ? `<a href="${pdfUrl}" target="_blank" class="link-pdf">📄 Ver PDF</a>` : '<span style="color:#aaa;font-size:0.8rem;">—</span>'}
-          </td>
+<button class="link-pdf" onclick='generarPDFDesdePanel(${JSON.stringify(fila)})'>📄 Generar PDF</button>          </td>
         `;
         tbody.appendChild(tr);
       });
@@ -631,6 +631,152 @@
       document.getElementById("input-clave").value = "";
       document.getElementById("input-clave").disabled = false;
     }
+function generarPDFDesdePanel(fila) {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+  const pageW = 210;
+  const margin = 20;
+  let y = 15;
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(7.5);
+  doc.setTextColor(0, 48, 135);
+  doc.text("Presidencia de la Nación", margin, y + 5);
+  doc.text("ENACOM", margin, y + 9);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(6.5);
+  doc.setTextColor(80, 80, 80);
+  doc.text("INSTITUTO SUPERIOR DE ENSEÑANZA RADIOFÓNICA", margin, y + 13);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(18);
+  doc.setTextColor(0, 48, 135);
+  doc.text("ISER", pageW - margin, y + 9, { align: "right" });
+  y += 18;
+  doc.line(margin, y, pageW - margin, y);
+  y += 6;
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(13);
+  doc.setTextColor(0, 48, 135);
+  doc.text("FORMULARIO DE MATRICULACIÓN", pageW / 2, y, { align: "center" });
+  y += 8;
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(9);
+  doc.setTextColor(50, 50, 50);
+  doc.text(`Fecha: ${fila["Fecha Formulario"] || "—"}`, margin, y);
+  doc.setFont("helvetica", "bold");
+  doc.text(`Carrera: ${fila["Carrera"] || "—"}`, margin + 50, y);
+  y += 5;
+  doc.setFont("helvetica", "normal");
+  doc.text(`Año: ${fila["Año Matrícula"] || "—"}°`, margin, y);
+  if (fila["Turno"]) doc.text(`Turno: ${fila["Turno"]}`, margin + 30, y);
+  y += 8;
+  doc.line(margin, y, pageW - margin, y);
+  y += 5;
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(10);
+  doc.setTextColor(0, 48, 135);
+  doc.text("DATOS PERSONALES", margin, y);
+  y += 6;
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(9);
+  doc.setTextColor(30, 30, 30);
+
+  const filasDatos = [
+    [`Apellidos: ${fila["Apellidos"] || "—"}`, `Nombres: ${fila["Nombres"] || "—"}`],
+    [`Fecha Nac.: ${fila["Fecha Nacimiento"] || "—"}`, `Nacionalidad: ${fila["Nacionalidad"] || "—"}`, `DNI: ${fila["DNI"] || "—"}`],
+    [`Domicilio: ${fila["Domicilio"] || "—"}`, `Localidad: ${fila["Localidad"] || "—"}`, `CP: ${fila["CP"] || "—"}`],
+    [`Tel.: ${fila["Tel Celular"] || "—"}`, `Alt.: ${fila["Tel Alternativo"] || "—"}`],
+    [`Email: ${fila["Email"] || "—"}`],
+  ];
+
+  filasDatos.forEach((f) => {
+    const partW = (pageW - margin * 2) / f.length;
+    f.forEach((texto, i) => doc.text(texto, margin + i * partW, y, { maxWidth: partW - 4 }));
+    y += 6;
+  });
+
+  y += 3;
+  doc.line(margin, y, pageW - margin, y);
+  y += 5;
+
+  const seccionMateria = (titulo, col1, col2, col3) => {
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(10);
+    doc.setTextColor(0, 48, 135);
+    doc.text(titulo, margin, y);
+    y += 5;
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8);
+    doc.setTextColor(30, 30, 30);
+    const listas = [
+      (col1 || "").split(" | ").filter(Boolean),
+      (col2 || "").split(" | ").filter(Boolean),
+      (col3 || "").split(" | ").filter(Boolean),
+    ];
+    const maxItems = Math.max(...listas.map(l => l.length));
+    const colW = (pageW - margin * 2) / 3;
+    for (let i = 0; i < maxItems; i++) {
+      listas.forEach((lista, col) => {
+        const materia = lista[i];
+        if (!materia) return;
+        const x = margin + col * colW;
+        doc.setDrawColor(80, 80, 80);
+        doc.setLineWidth(0.3);
+        doc.rect(x, y - 2.5, 3, 3);
+        doc.text(doc.splitTextToSize(` ${materia}`, colW - 8), x + 4, y - 0.5);
+      });
+      y += 5;
+    }
+  };
+
+  seccionMateria(
+    "ASIGNATURAS PENDIENTES A RENDIR (marcar con una X)",
+    fila["Pendientes - 1er Año"],
+    fila["Pendientes - 2do Año"],
+    fila["Pendientes - 3er Año"]
+  );
+
+  y += 3;
+  doc.line(margin, y, pageW - margin, y);
+  y += 5;
+
+  seccionMateria(
+    "ASIGNATURAS A RECURSAR (marcar con una X)",
+    fila["Recursar - 1er Año"],
+    fila["Recursar - 2do Año"],
+    fila["Recursar - 3er Año"]
+  );
+
+  y += 6;
+  doc.setFontSize(7.5);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(30, 30, 30);
+  const decl = "LA/EL FIRMANTE MANIFIESTA QUE LOS DATOS CONSIGNADOS EN EL PRESENTE FORMULARIO SON EXACTOS Y VERDADEROS. ASI MISMO SE NOTIFICA DE LA DISP. N° 196/19.";
+  doc.text(doc.splitTextToSize(decl, pageW - margin * 2), margin, y);
+  y += 12;
+
+  doc.setDrawColor(0, 48, 135);
+  doc.setLineWidth(0.4);
+  doc.rect(margin, y, pageW - margin * 2, 10);
+  doc.setFont("helvetica", "normal");
+  doc.text(doc.splitTextToSize("LA PRESENTE MATRICULACIÓN QUEDA SUPEDITADA A LA CERTIFICACIÓN DE LOS DATOS APORTADOS Y LAS CONSTANCIAS OBRANTES EN EL RESPECTIVO LEGAJO.", pageW - margin * 2 - 6), margin + 3, y + 3);
+  y += 16;
+
+  const firmaY = Math.max(y, 265);
+  doc.setDrawColor(0, 0, 0);
+  doc.setLineWidth(0.3);
+  doc.line(margin, firmaY, margin + 60, firmaY);
+  doc.line(pageW - margin - 60, firmaY, pageW - margin, firmaY);
+  doc.setFontSize(8);
+  doc.text("Bedel Interviniente", margin + 30, firmaY + 4, { align: "center" });
+  doc.text("Firma y aclaración del Alumno", pageW - margin - 30, firmaY + 4, { align: "center" });
+
+  const nombre = `${fila["Apellidos"]}_${fila["Nombres"]}_${fila["Carrera"]}_2026.pdf`.replace(/\s+/g, "_");
+  doc.save(nombre);
+}
   </script>
 
 </body>
