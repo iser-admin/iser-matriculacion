@@ -242,4 +242,36 @@ const CARRERAS = {
     recursar: {
       "O. PLANTA PRIMER AÑO": [
         "Electroacústica", "Inglés técnico I",
-        "Introducción a
+        "Introducción a la electrónica",
+        "Introducción a las Tecn. digitales",
+        "Sistemas operativos de computación",
+        "Tecn. Oper. y Mant. de planta AM",
+        "Electrónica aplicada a planta AM", "Suministro de energía"
+      ],
+      "O. PLANTA SEGUNDO AÑO": [
+        "Régimen Legal de la Radiodifusión", "Inglés técnico II",
+        "Tecn. Oper. y Mant. de planta CATV",
+        "Tecn. Oper. y Mant. de planta FM",
+        "Tecn. Oper. y Mant. de planta TV",
+        "Electro. Aplic. a planta FM y TV", "Eq. Estudio radio y TV",
+        "Mediciones y prácticas electrónicas",
+        "Tec. Dig. Aplic a planta FM y TV"
+      ]
+    }
+  },
+
+  CONVERGENCIA: {
+    nombre: "Convergencia",
+    turno: false,
+    pendientes: {
+      "CONVERGENCIA PRIMER AÑO": [],
+      "CONVERGENCIA SEGUNDO AÑO": [],
+      "CONVERGENCIA TERCER AÑO": []
+    },
+    recursar: {
+      "CONVERGENCIA PRIMER AÑO": [],
+      "CONVERGENCIA SEGUNDO AÑO": [],
+      "CONVERGENCIA TERCER AÑO": []
+    }
+  }
+};
