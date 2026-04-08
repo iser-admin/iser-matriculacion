@@ -404,8 +404,8 @@ async function descargarPDF() {
  
   // Encabezado con logos
   try { doc.addImage("data:image/png;base64," + LOGO_PRES_B64, "PNG", margin, y, 88, 20); } catch(e){}
-  try { doc.addImage("data:image/jpeg;base64," + LOGO_ISER_B64, "JPEG", pageW - margin - 27, y - 1, 27, 22); } catch(e){}
-  y += 24;
+try { doc.addImage("data:image/jpeg;base64," + LOGO_ISER_B64, "JPEG", pageW - margin - 38, y + 1, 38, 14); } catch(e){} 
+ y += 24;
   doc.setDrawColor(0, 48, 135);
   doc.setLineWidth(0.6);
   doc.line(margin, y, pageW - margin, y);
