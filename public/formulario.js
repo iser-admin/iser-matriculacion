@@ -420,15 +420,15 @@ try { doc.addImage("data:image/jpeg;base64," + LOGO_ISER_B64, "JPEG", pageW - ma
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
   doc.setTextColor(50, 50, 50);
-  doc.text(`Fecha de Matriculación: ${datos.fechaFormulario}`, margin, y);
-  y += 5;
+doc.text(`Fecha de Matriculación: ${datos.fechaFormulario}`, margin, y);
   doc.setFont("helvetica", "bold");
-  doc.text(`Carrera: ${carreraDatos.nombre}`, margin, y);
+  doc.text(`Carrera: ${carreraDatos.nombre}`, margin + 70, y);
+  doc.setFont("helvetica", "normal");
   y += 5;
   doc.setFont("helvetica", "normal");
-  doc.text(`Año al que se matricula: ${datos.anioMatricula}°`, margin, y);
-  if (datos.turno) doc.text(`Turno: ${turnos[datos.turno]}`, margin + 70, y);
-  y += 8;
+doc.text(`Año al que se matricula: ${datos.anioMatricula}°`, margin, y);
+  if (datos.turno) doc.text(`Turno: ${turnos[datos.turno]}`, margin + 90, y);
+  y += 5;
   doc.line(margin, y, pageW - margin, y);
   y += 5;
  
