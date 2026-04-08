@@ -397,9 +397,9 @@ async function descargarPDF() {
   const carreraDatos = getCarreraDatos();
   const turnos = { TM: "Turno Mañana", TT: "Turno Tarde", TN: "Turno Noche" };
  
-  const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
   const pageW = 210;
-  const margin = 20;
+  const margin = 14;
   let y = 15;
  
   // Encabezado con logos
