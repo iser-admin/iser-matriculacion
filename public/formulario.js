@@ -503,7 +503,7 @@ try { doc.addImage("data:image/jpeg;base64," + LOGO_ISER_B64, "JPEG", pageW - ma
   y += 18;
  
   // Firmas
-  const firmaY = Math.max(y + 12, 258);
+  const firmaY = Math.max(y + 12, 250);
   doc.setDrawColor(30, 30, 30);
   doc.setLineWidth(0.4);
   const lineLen = 70;
