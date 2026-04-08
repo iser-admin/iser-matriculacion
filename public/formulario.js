@@ -491,7 +491,7 @@ try { doc.addImage("data:image/jpeg;base64," + LOGO_ISER_B64, "JPEG", pageW - ma
   const declaracion = "LA/EL FIRMANTE MANIFIESTA QUE LOS DATOS CONSIGNADOS EN EL PRESENTE FORMULARIO SON EXACTOS Y VERDADEROS. ASI MISMO SE NOTIFICA DE LA DISP. N° 196/19, CUYO TEXTO SE ENCUENTRA A DISPOSICIÓN DE LOS INTERESADOS EN BEDELÍA.";
   const splitDecl = doc.splitTextToSize(declaracion, pageW - margin * 2);
   doc.text(splitDecl, margin, y);
-  y += splitDecl.length * 4 + 3;
+  y += splitDecl.length * 3.5 + 2;
  
   doc.setDrawColor(0, 48, 135);
   doc.setLineWidth(0.4);
@@ -527,7 +527,7 @@ function renderMateriasEnPDF(doc, carreraDatos, tipo, margin, y, pageW) {
   anios.forEach((anio, i) => {
     doc.text(anio, margin + i * colW, y, { maxWidth: colW - 2 });
   });
-  y += 5;
+  y += 4;
  
   const maxItems = Math.max(...anios.map((a) => (carreraDatos[tipo][a] || []).length));
  
@@ -561,7 +561,7 @@ function renderMateriasEnPDF(doc, carreraDatos, tipo, margin, y, pageW) {
       doc.setFont("helvetica", "normal");
       doc.setTextColor(30, 30, 30);
     });
-    y += 5;
+    y += 4.5;
   }
   return y;
 }
