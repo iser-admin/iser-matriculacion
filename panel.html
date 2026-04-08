@@ -380,7 +380,9 @@ function generarPDF(btn) {
 
   // ── Logos ──
   try { doc.addImage("data:image/png;base64,"  + LOGO_PRES_B64, "PNG",  margin,               y,     88, 20); } catch(e){}
-try { doc.addImage("data:image/jpeg;base64," + LOGO_ISER_B64, "JPEG", pageW - margin - 35, y, 35, 13); } catch(e){}  y += 25;
+ try { doc.addImage("data:image/jpeg;base64," + LOGO_ISER_B64, "JPEG", pageW - margin - 38, y + 1, 38, 14); } catch(e){} 
+ 
+  y += 25;
 
   doc.setDrawColor(0,48,135); doc.setLineWidth(0.6);
   doc.line(margin, y, pageW-margin, y); y += 7;
